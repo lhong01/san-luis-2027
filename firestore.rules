@@ -1,0 +1,34 @@
+rules_version = '2';
+
+// Reglas para el tracker de San Luis 2027.
+// Copiar y pegar en: Consola de Firebase → Firestore Database → Reglas → Publicar.
+//
+// Modelo de confianza: cualquiera que abra la página puede marcar a cualquiera.
+// Las reglas solo exigen que la escritura venga de la página (acceso anónimo),
+// limitan los campos permitidos y no dejan borrar participantes ni la configuración.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function desdeLaPagina() {
+      return request.auth != null;
+    }
+
+    match /config/general {
+      allow read: if desdeLaPagina();
+      allow create, update: if desdeLaPagina()
+        && request.resource.data.keys().hasOnly(['inicio', 'horaLimite', 'aperturaFichaje', 'ensayos', 'pasajes'])
+        && request.resource.data.ensayos is list
+        && request.resource.data.ensayos.size() <= 60;
+    }
+
+    match /personas/{id} {
+      allow read: if desdeLaPagina();
+      allow create, update: if desdeLaPagina()
+        && request.resource.data.keys().hasOnly(['nombre', 'activo', 'desde', 'oracion', 'qt', 'llegadas'])
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() > 0
+        && request.resource.data.nombre.size() <= 60;
+    }
+  }
+}
