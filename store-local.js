@@ -1,7 +1,7 @@
 // Modo prueba: mientras config.js no tenga los datos de Firebase, todo se guarda
 // solo en este navegador, con participantes ficticios. Sirve para ver y probar la página.
 
-import { CONFIG_DEFAULT, fechaART, rango, sumarDias } from './logic.js?v=5';
+import { CONFIG_DEFAULT, fechaART, rango, sumarDias } from './logic.js?v=6';
 
 const KEY = 'tracker-sanluis-demo-v1';
 const NOMBRES = ['Ana Prueba', 'Bruno Prueba', 'Carla Prueba', 'Diego Prueba', 'Eva Prueba', 'Franco Prueba'];

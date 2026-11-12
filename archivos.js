@@ -11,11 +11,19 @@ export const CARPETAS = [
     ],
   },
   {
+    id: 'silla',
+    nombre: 'SILLA - Obra de Teatro',
+    archivos: [
+      { nombre: 'Video Silla · San Luis 2026', tipo: 'video', ruta: 'archivos/silla/silla-san-luis-2026.mp4', detalle: '6:28 min · 73 MB, mejor con wifi' },
+    ],
+  },
+  {
     id: 'puerta',
     nombre: 'PUERTA - Obra de Teatro',
     archivos: [
       { nombre: 'Guion Puerta 1', tipo: 'imagen', ruta: 'archivos/puerta/guion-puerta-1.jpeg' },
       { nombre: 'Guion Puerta 2', tipo: 'imagen', ruta: 'archivos/puerta/guion-puerta-2.jpeg' },
+      { nombre: 'Video Puerta · ensayo 2026', tipo: 'link', ruta: 'https://www.youtube.com/watch?v=NSM_WO2PK3M', detalle: 'YouTube · ensayo del 4/12/2025' },
     ],
   },
 ];

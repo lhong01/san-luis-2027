@@ -1,7 +1,7 @@
-import { firebaseConfig } from './config.js?v=5';
-import * as L from './logic.js?v=5';
-import { CARPETAS, USOS } from './archivos.js?v=5';
-import { abrirVisor } from './visor.js?v=5';
+import { firebaseConfig } from './config.js?v=6';
+import * as L from './logic.js?v=6';
+import { CARPETAS, USOS } from './archivos.js?v=6';
+import { abrirVisor } from './visor.js?v=6';
 
 const $app = document.getElementById('app');
 const $aviso = document.getElementById('aviso');
@@ -736,10 +736,10 @@ setTimeout(() => {
 
 try {
   if (modoPrueba) {
-    const { crearStoreLocal } = await import('./store-local.js?v=5');
+    const { crearStoreLocal } = await import('./store-local.js?v=6');
     store = crearStoreLocal(ahora);
   } else {
-    const { crearStoreFirebase } = await import('./store-firebase.js?v=5');
+    const { crearStoreFirebase } = await import('./store-firebase.js?v=6');
     store = await crearStoreFirebase(firebaseConfig);
   }
   const alFallar = (e) => { S.error = explicar(e); render(); };
