@@ -79,7 +79,7 @@ Datos en Firestore:
 
 ```
 config/general   inicio, horaLimite, aperturaFichaje, ensayos[], pasajes{fecha: texto}
-props/{id}       nombre, cantidad, nota, usos[], listo
+props/{id}       nombre, cantidad, nota, encargado (id de persona), usos[], listo
 personas/{id}    nombre, activo, desde, oracion{fecha: true}, qt{fecha: true}, llegadas{fecha: hora del servidor}
 ```
 

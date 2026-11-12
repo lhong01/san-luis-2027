@@ -2,7 +2,7 @@
 //
 // Estructura:
 //   config/general   { inicio, horaLimite, aperturaFichaje, ensayos: [fechas], pasajes: { fecha: "Oseas 6:1-11" } }
-//   props/{id}       { nombre, cantidad, nota, usos: [obras o actividades], listo }
+//   props/{id}       { nombre, cantidad, nota, encargado: id de persona, usos: [obras o actividades], listo }
 //   personas/{id}    { nombre, activo, desde, oracion: { fecha: true }, qt: { fecha: true }, llegadas: { fecha: Timestamp } }
 //
 // La hora de llegada la pone el servidor (serverTimestamp), no el reloj del celular.
@@ -102,6 +102,7 @@ function normalizarProp(id, d) {
     nombre: d.nombre || '(sin nombre)',
     cantidad: d.cantidad || '',
     nota: d.nota || '',
+    encargado: d.encargado || '',
     usos: Array.isArray(d.usos) ? d.usos : [],
     listo: d.listo === true,
   };

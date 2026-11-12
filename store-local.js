@@ -12,7 +12,7 @@ export function crearStoreLocal(ahora) {
   const subsC = new Set();
   const subsR = new Set();
   data.props = data.props || {};
-  const listaProps = () => Object.entries(data.props).map(([id, p]) => ({ id, ...structuredClone(p) }));
+  const listaProps = () => Object.entries(data.props).map(([id, p]) => ({ encargado: '', id, ...structuredClone(p) }));
 
   const lista = () => Object.entries(data.personas).map(([id, p]) => ({ id, ...structuredClone(p) }));
   const emitir = () => {
@@ -131,9 +131,9 @@ function semilla(ahoraMs) {
     personas['demo' + i] = p;
   });
   const props = {
-    demo1: { nombre: 'Silla de madera', cantidad: '1', nota: '', usos: ['Silla'], listo: true },
-    demo2: { nombre: 'Tela negra', cantidad: '3', nota: 'Se usa de fondo', usos: ['Puerta', 'Carga pesada'], listo: false },
-    demo3: { nombre: 'Globos largos', cantidad: '200', nota: '', usos: ['Globos y pintura de caras'], listo: false },
+    demo1: { nombre: 'Silla de madera', cantidad: '1', nota: '', encargado: 'demo0', usos: ['Silla'], listo: true },
+    demo2: { nombre: 'Tela negra', cantidad: '3', nota: 'Se usa de fondo', encargado: 'demo1', usos: ['Puerta', 'Carga pesada'], listo: false },
+    demo3: { nombre: 'Globos largos', cantidad: '200', nota: '', encargado: 'demo0', usos: ['Globos y pintura de caras'], listo: false },
   };
   return { config, personas, props };
 }

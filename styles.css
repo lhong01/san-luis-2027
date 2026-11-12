@@ -603,3 +603,19 @@ body.con-visor { overflow: hidden; }
 .form-prop .fila { flex-wrap: wrap; margin-top: 4px; }
 .tabs button { min-width: 0; }
 @media (max-width: 400px) { .tabs button { font-size: .66rem; } }
+
+.card select, .filtro-enc select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font: inherit;
+  color: inherit;
+}
+.filtro-enc { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; font-size: .88rem; font-weight: 600; color: var(--muted); }
+.filtro-enc select { background: var(--surface); }
+.prop-enc { font-size: .82rem; color: var(--muted); }
+.prop-enc b { color: var(--text); }
+.prop-enc.falta { font-weight: 600; color: var(--warn); }

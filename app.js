@@ -62,6 +62,7 @@ const S = {
   propsError: null,
   propUso: 'todos',        // filtro por obra o actividad
   propEstado: 'todos',     // todos | faltan | listos
+  propEnc: 'todos',        // filtro por encargado: todos | sin | id de persona
   propForm: null,          // { id, nombre, cantidad, nota, usos: [] } mientras se agrega o edita
 };
 
@@ -441,12 +442,19 @@ function vistaProps() {
   if (!S.props) return '<h1 class="titulo-vista">Props</h1><p class="cargando">Cargando…</p>';
 
   const todos = [...S.props].sort((a, b) => Number(a.listo) - Number(b.listo) || porNombre(a, b));
-  const deUso = S.propUso === 'todos' ? todos : todos.filter((p) => p.usos.includes(S.propUso));
+  const nombreDe = (id) => persona(id)?.nombre || '';
+  const encargados = [...new Set(todos.map((p) => p.encargado).filter((id) => nombreDe(id)))]
+    .sort((a, b) => nombreDe(a).localeCompare(nombreDe(b), 'es'));
+  const haySin = todos.some((p) => !nombreDe(p.encargado));
+  if (S.propEnc !== 'todos' && S.propEnc !== 'sin' && !encargados.includes(S.propEnc)) S.propEnc = 'todos';
+  const deEnc = S.propEnc === 'todos' ? todos
+    : todos.filter((p) => (S.propEnc === 'sin' ? !nombreDe(p.encargado) : p.encargado === S.propEnc));
+  const deUso = S.propUso === 'todos' ? deEnc : deEnc.filter((p) => p.usos.includes(S.propUso));
   const visibles = deUso.filter((p) => S.propEstado === 'todos' || (S.propEstado === 'listos') === p.listo);
   const listos = deUso.filter((p) => p.listo).length;
-  const cuenta = (u) => todos.filter((p) => p.usos.includes(u)).length;
+  const cuenta = (u) => deEnc.filter((p) => p.usos.includes(u)).length;
 
-  const chips = [['todos', 'Todo', todos.length], ...USOS.map((u) => [u, u, cuenta(u)])]
+  const chips = [['todos', 'Todo', deEnc.length], ...USOS.map((u) => [u, u, cuenta(u)])]
     .map(([v, t, n]) => `<button class="filtro${S.propUso === v ? ' on' : ''}" data-accion="prop-uso" data-v="${esc(v)}" aria-pressed="${S.propUso === v}">${esc(t)}${n ? ` <b>${n}</b>` : ''}</button>`).join('');
   const estados = [['todos', 'Todos'], ['faltan', 'Faltan'], ['listos', 'Listos']]
     .map(([v, t]) => `<button role="tab" data-accion="prop-estado" data-v="${v}" aria-selected="${S.propEstado === v}">${t}</button>`).join('');
@@ -454,6 +462,7 @@ function vistaProps() {
   const filas = visibles.map((p) => `<li class="prop${p.listo ? ' listo' : ''}">
       <button class="prop-check" data-accion="prop-listo" data-id="${p.id}" aria-pressed="${p.listo}" aria-label="${p.listo ? 'Marcar que falta' : 'Marcar que ya lo tenemos'}: ${esc(p.nombre)}">${p.listo ? '✓' : ''}</button>
       <div class="prop-info"><span class="prop-nombre">${esc(p.nombre)}${p.cantidad ? ` <small>× ${esc(p.cantidad)}</small>` : ''}</span>
+        <span class="prop-enc${nombreDe(p.encargado) ? '' : ' falta'}">${nombreDe(p.encargado) ? `Encargado: <b>${esc(nombreDe(p.encargado))}</b>` : 'Sin encargado'}</span>
         ${p.nota ? `<span class="prop-nota">${esc(p.nota)}</span>` : ''}
         <span class="prop-usos">${p.usos.map((u) => `<span class="chip">${esc(u)}</span>`).join('')}</span></div>
       <button class="prop-editar" data-accion="prop-editar" data-id="${p.id}" aria-label="Editar ${esc(p.nombre)}">Editar</button>
@@ -462,9 +471,15 @@ function vistaProps() {
   return `<h1 class="titulo-vista">Props</h1>
     <p class="explica">Lo que hace falta para las obras y actividades. Tocá el círculo cuando ya lo tengamos.</p>
     ${S.propForm ? formProp() : '<button class="btn" data-accion="prop-nuevo">+ Agregar prop</button>'}
+    <label class="filtro-enc">Encargado
+      <select data-filtro-enc>
+        <option value="todos"${S.propEnc === 'todos' ? ' selected' : ''}>Todos</option>
+        ${encargados.map((id) => `<option value="${id}"${S.propEnc === id ? ' selected' : ''}>${esc(nombreDe(id))}</option>`).join('')}
+        ${haySin ? `<option value="sin"${S.propEnc === 'sin' ? ' selected' : ''}>Sin encargado</option>` : ''}
+      </select></label>
     <div class="filtros">${chips}</div>
     <div class="segmentos tres" role="tablist">${estados}</div>
-    <p class="explica"><b>${listos} de ${deUso.length}</b> listos${S.propUso === 'todos' ? '' : ` para ${esc(S.propUso)}`}.</p>
+    <p class="explica"><b>${listos} de ${deUso.length}</b> listos${S.propUso === 'todos' ? '' : ` para ${esc(S.propUso)}`}${S.propEnc === 'todos' ? '' : S.propEnc === 'sin' ? ' sin encargado' : ` a cargo de ${esc(nombreDe(S.propEnc))}`}.</p>
     <ul class="props">${filas || `<li class="vacio">${todos.length ? 'No hay props con este filtro.' : 'Todavía no hay props cargados. Agregá el primero.'}</li>`}</ul>`;
 }
 
@@ -476,6 +491,12 @@ function formProp() {
     <label>Nombre<input data-pf="nombre" value="${esc(f.nombre)}" placeholder="Ej: Silla de madera" maxlength="80" autocomplete="off"></label>
     <div class="dos"><label>Cantidad<input data-pf="cantidad" value="${esc(f.cantidad)}" placeholder="Ej: 2" maxlength="20" autocomplete="off"></label>
       <label>Nota<input data-pf="nota" value="${esc(f.nota)}" placeholder="Quién lo trae, dónde está…" maxlength="120" autocomplete="off"></label></div>
+    <label>Encargado
+      <select data-pf="encargado">
+        <option value="">Elegí quién se encarga…</option>
+        ${activos().map((p) => `<option value="${p.id}"${f.encargado === p.id ? ' selected' : ''}>${esc(p.nombre)}</option>`).join('')}
+        ${f.encargado && !activos().some((p) => p.id === f.encargado) && persona(f.encargado) ? `<option value="${f.encargado}" selected>${esc(persona(f.encargado).nombre)} (inactivo)</option>` : ''}
+      </select></label>
     <p class="etiqueta">¿Dónde se usa?</p>
     <div class="filtros envuelve">${USOS.map((u) => `<button type="button" class="filtro${f.usos.includes(u) ? ' on' : ''}" data-accion="pf-uso" data-v="${esc(u)}" aria-pressed="${f.usos.includes(u)}">${esc(u)}</button>`).join('')}</div>
     <div class="fila"><button class="btn" data-accion="prop-guardar">Guardar</button>
@@ -615,13 +636,13 @@ const acciones = {
     if (p) ejecutar(store.actualizarProp(p.id, { listo: !p.listo }));
   },
   'prop-nuevo'() {
-    S.propForm = { id: null, nombre: '', cantidad: '', nota: '', usos: S.propUso === 'todos' ? [] : [S.propUso] };
+    S.propForm = { id: null, nombre: '', cantidad: '', nota: '', encargado: persona(S.propEnc) ? S.propEnc : '', usos: S.propUso === 'todos' ? [] : [S.propUso] };
     render();
   },
   'prop-editar'(d) {
     const p = S.props?.find((x) => x.id === d.id);
     if (!p) return;
-    S.propForm = { id: p.id, nombre: p.nombre, cantidad: p.cantidad, nota: p.nota, usos: [...p.usos] };
+    S.propForm = { id: p.id, nombre: p.nombre, cantidad: p.cantidad, nota: p.nota, encargado: p.encargado, usos: [...p.usos] };
     render();
     window.scrollTo(0, 0);
   },
@@ -633,8 +654,9 @@ const acciones = {
   },
   'prop-guardar'() {
     const f = S.propForm;
-    const datos = { nombre: f.nombre.trim(), cantidad: f.cantidad.trim(), nota: f.nota.trim(), usos: USOS.filter((u) => f.usos.includes(u)) };
+    const datos = { nombre: f.nombre.trim(), cantidad: f.cantidad.trim(), nota: f.nota.trim(), encargado: f.encargado || '', usos: USOS.filter((u) => f.usos.includes(u)) };
     if (!datos.nombre) { avisar('Ponele un nombre al prop.', 'error'); return; }
+    if (!datos.encargado) { avisar('Elegí un encargado.', 'error'); return; }
     document.activeElement?.blur();
     S.propForm = null;
     if (f.id) ejecutar(store.actualizarProp(f.id, datos), 'Prop actualizado.');
@@ -667,6 +689,8 @@ $app.addEventListener('input', (ev) => {
 
 $app.addEventListener('change', (ev) => {
   const el = ev.target;
+  if ('filtroEnc' in el.dataset) { S.propEnc = el.value; el.blur(); render(); return; }
+  if (el.dataset.pf && S.propForm) { S.propForm[el.dataset.pf] = el.value; return; }
   if (el.dataset.campo) {
     const campo = el.dataset.campo;
     const valor = el.type === 'checkbox' ? el.checked : el.value.trim();

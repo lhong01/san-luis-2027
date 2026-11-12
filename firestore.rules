@@ -25,7 +25,7 @@ service cloud.firestore {
     match /props/{id} {
       allow read, delete: if desdeLaPagina();
       allow create, update: if desdeLaPagina()
-        && request.resource.data.keys().hasOnly(['nombre', 'cantidad', 'nota', 'usos', 'listo'])
+        && request.resource.data.keys().hasOnly(['nombre', 'cantidad', 'nota', 'encargado', 'usos', 'listo'])
         && request.resource.data.nombre is string
         && request.resource.data.nombre.size() > 0
         && request.resource.data.nombre.size() <= 80
