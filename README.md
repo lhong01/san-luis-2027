@@ -17,6 +17,10 @@ Es una página estática (sin build): HTML, CSS y JavaScript. Los datos viven en
 
 Copiar el archivo en `archivos/<carpeta>/` y agregarlo a la lista de `archivos.js` (ahí también están las obras y actividades que sirven de filtro en Props). Después, commit y push. El repositorio es público: cualquiera con el link puede ver lo que se suba.
 
+## Publicar cambios de código
+
+Los celulares guardan copias de la página. Cada vez que se cambie el código, subir el número de versión `?v=` en `index.html` (CSS y `app.js`) y en los `import` de los `.js`, para que todos reciban la versión nueva. GitHub Pages además guarda copia hasta 10 minutos.
+
 ## Reglas del conteo
 
 | Qué | Regla |

@@ -7,7 +7,7 @@
 //
 // La hora de llegada la pone el servidor (serverTimestamp), no el reloj del celular.
 
-import { CONFIG_DEFAULT } from './logic.js';
+import { CONFIG_DEFAULT } from './logic.js?v=5';
 
 const V = '10.14.1';
 const URL = (m) => `https://www.gstatic.com/firebasejs/${V}/firebase-${m}.js`;
