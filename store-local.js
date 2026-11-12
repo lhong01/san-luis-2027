@@ -10,6 +10,9 @@ export function crearStoreLocal(ahora) {
   let data = leer() || semilla(ahora());
   const subsP = new Set();
   const subsC = new Set();
+  const subsR = new Set();
+  data.props = data.props || {};
+  const listaProps = () => Object.entries(data.props).map(([id, p]) => ({ id, ...structuredClone(p) }));
 
   const lista = () => Object.entries(data.personas).map(([id, p]) => ({ id, ...structuredClone(p) }));
   const emitir = () => {
@@ -17,6 +20,7 @@ export function crearStoreLocal(ahora) {
     const cfg = structuredClone(data.config);
     subsP.forEach((cb) => cb(ps));
     subsC.forEach((cb) => cb(cfg));
+    subsR.forEach((cb) => cb(listaProps()));
   };
   const guardar = () => {
     try { localStorage.setItem(KEY, JSON.stringify(data)); } catch { /* sin almacenamiento */ }
@@ -71,6 +75,11 @@ export function crearStoreLocal(ahora) {
       guardar();
     },
 
+    onProps(cb) { subsR.add(cb); queueMicrotask(() => cb(listaProps())); return () => subsR.delete(cb); },
+    async agregarProp(datos) { data.props['r' + Math.random().toString(36).slice(2, 9)] = datos; guardar(); },
+    async actualizarProp(id, cambios) { Object.assign(data.props[id], cambios); guardar(); },
+    async borrarProp(id) { delete data.props[id]; guardar(); },
+
     async guardarPasajes(mapa) {
       data.config.pasajes = data.config.pasajes || {};
       for (const [f, texto] of Object.entries(mapa)) {
@@ -121,7 +130,12 @@ function semilla(ahoraMs) {
     }
     personas['demo' + i] = p;
   });
-  return { config, personas };
+  const props = {
+    demo1: { nombre: 'Silla de madera', cantidad: '1', nota: '', usos: ['Silla'], listo: true },
+    demo2: { nombre: 'Tela negra', cantidad: '3', nota: 'Se usa de fondo', usos: ['Puerta', 'Carga pesada'], listo: false },
+    demo3: { nombre: 'Globos largos', cantidad: '200', nota: '', usos: ['Globos y pintura de caras'], listo: false },
+  };
+  return { config, personas, props };
 }
 
 function azar(a, b, c) {

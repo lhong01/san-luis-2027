@@ -1,5 +1,7 @@
 import { firebaseConfig } from './config.js';
 import * as L from './logic.js';
+import { CARPETAS, USOS } from './archivos.js';
+import { abrirVisor } from './visor.js';
 
 const $app = document.getElementById('app');
 const $aviso = document.getElementById('aviso');
@@ -55,6 +57,12 @@ const S = {
   confirmar: null,
   borradorQT: {},          // lo que se está escribiendo en "QT de la semana" sin guardar
   borradorNuevos: '',
+  carpeta: null,           // carpeta abierta en Archivos
+  props: null,
+  propsError: null,
+  propUso: 'todos',        // filtro por obra o actividad
+  propEstado: 'todos',     // todos | faltan | listos
+  propForm: null,          // { id, nombre, cantidad, nota, usos: [] } mientras se agrega o edita
 };
 
 let store;
@@ -133,6 +141,8 @@ function pagina() {
   else if (sinIdentidad) cuerpo = vistaElegir(yo);
   else if (S.vista === 'ranking') cuerpo = vistaRanking();
   else if (S.vista === 'planilla') cuerpo = vistaPlanilla();
+  else if (S.vista === 'archivos') cuerpo = vistaArchivos();
+  else if (S.vista === 'props') cuerpo = vistaProps();
   else cuerpo = vistaHoy();
 
   const conTabs = !sinIdentidad || S.admin;
@@ -159,11 +169,13 @@ const ICONOS = {
   hoy: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   ranking: '<path d="M6 20v-8M12 20V4M18 20v-12"/>',
   planilla: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
+  archivos: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  props: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>',
   ajustes: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
 };
 
 function tabs() {
-  const lista = [['hoy', 'Hoy'], ['ranking', 'Ranking'], ['planilla', 'Planilla']];
+  const lista = [['hoy', 'Hoy'], ['ranking', 'Ranking'], ['planilla', 'Planilla'], ['archivos', 'Archivos'], ['props', 'Props']];
   if (S.admin) lista.push(['ajustes', 'Ajustes']);
   return `<nav class="tabs" aria-label="Secciones">${lista.map(([v, txt]) => `
     <button data-accion="vista" data-v="${v}" class="${S.vista === v ? 'activa' : ''}" ${S.vista === v ? 'aria-current="page"' : ''}>
@@ -393,6 +405,85 @@ function vistaPlanilla() {
   </section>`;
 }
 
+// ---------- Vista: Archivos ----------
+
+const ICO_TIPO = { pdf: 'PDF', imagen: 'IMG', audio: 'MP3', video: 'VID', link: 'WEB' };
+
+function vistaArchivos() {
+  const carpeta = CARPETAS.find((c) => c.id === S.carpeta);
+  if (!carpeta) {
+    return `<h1 class="titulo-vista">Archivos</h1>
+      <p class="explica">Material del viaje: canciones, guiones y todo lo que vayamos sumando.</p>
+      <ul class="carpetas">${CARPETAS.map((c) => `<li><button data-accion="carpeta" data-id="${c.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">${ICONOS.archivos}</svg>
+        <span class="carpeta-nombre">${esc(c.nombre)}</span>
+        <span class="carpeta-cant">${plural(c.archivos.length, 'archivo', 'archivos')}</span>
+        <span aria-hidden="true">›</span></button></li>`).join('')}</ul>`;
+  }
+  return `<button class="link volver" data-accion="carpeta" data-id="">‹ Archivos</button>
+    <h1 class="titulo-vista">${esc(carpeta.nombre)}</h1>
+    <ul class="lista-archivos">${carpeta.archivos.map((a, i) => {
+      const interior = `<span class="tipo tipo-${a.tipo}">${ICO_TIPO[a.tipo] || ''}</span>
+        <span class="archivo-nombre">${esc(a.nombre)}${a.detalle ? `<small>${esc(a.detalle)}</small>` : ''}</span><span aria-hidden="true">›</span>`;
+      return a.tipo === 'link'
+        ? `<li><a href="${esc(a.ruta)}" target="_blank" rel="noopener">${interior}</a></li>`
+        : `<li><button data-accion="abrir-archivo" data-c="${carpeta.id}" data-i="${i}">${interior}</button></li>`;
+    }).join('') || '<li class="vacio">Todavía no hay archivos en esta carpeta.</li>'}</ul>`;
+}
+
+// ---------- Vista: Props ----------
+
+function vistaProps() {
+  if (S.propsError) {
+    return `<h1 class="titulo-vista">Props</h1><section class="card"><h2>Todavía no está habilitado</h2>
+      <p class="muted">${esc(S.propsError)}</p></section>`;
+  }
+  if (!S.props) return '<h1 class="titulo-vista">Props</h1><p class="cargando">Cargando…</p>';
+
+  const todos = [...S.props].sort((a, b) => Number(a.listo) - Number(b.listo) || porNombre(a, b));
+  const deUso = S.propUso === 'todos' ? todos : todos.filter((p) => p.usos.includes(S.propUso));
+  const visibles = deUso.filter((p) => S.propEstado === 'todos' || (S.propEstado === 'listos') === p.listo);
+  const listos = deUso.filter((p) => p.listo).length;
+  const cuenta = (u) => todos.filter((p) => p.usos.includes(u)).length;
+
+  const chips = [['todos', 'Todo', todos.length], ...USOS.map((u) => [u, u, cuenta(u)])]
+    .map(([v, t, n]) => `<button class="filtro${S.propUso === v ? ' on' : ''}" data-accion="prop-uso" data-v="${esc(v)}" aria-pressed="${S.propUso === v}">${esc(t)}${n ? ` <b>${n}</b>` : ''}</button>`).join('');
+  const estados = [['todos', 'Todos'], ['faltan', 'Faltan'], ['listos', 'Listos']]
+    .map(([v, t]) => `<button role="tab" data-accion="prop-estado" data-v="${v}" aria-selected="${S.propEstado === v}">${t}</button>`).join('');
+
+  const filas = visibles.map((p) => `<li class="prop${p.listo ? ' listo' : ''}">
+      <button class="prop-check" data-accion="prop-listo" data-id="${p.id}" aria-pressed="${p.listo}" aria-label="${p.listo ? 'Marcar que falta' : 'Marcar que ya lo tenemos'}: ${esc(p.nombre)}">${p.listo ? '✓' : ''}</button>
+      <div class="prop-info"><span class="prop-nombre">${esc(p.nombre)}${p.cantidad ? ` <small>× ${esc(p.cantidad)}</small>` : ''}</span>
+        ${p.nota ? `<span class="prop-nota">${esc(p.nota)}</span>` : ''}
+        <span class="prop-usos">${p.usos.map((u) => `<span class="chip">${esc(u)}</span>`).join('')}</span></div>
+      <button class="prop-editar" data-accion="prop-editar" data-id="${p.id}" aria-label="Editar ${esc(p.nombre)}">Editar</button>
+    </li>`).join('');
+
+  return `<h1 class="titulo-vista">Props</h1>
+    <p class="explica">Lo que hace falta para las obras y actividades. Tocá el círculo cuando ya lo tengamos.</p>
+    ${S.propForm ? formProp() : '<button class="btn" data-accion="prop-nuevo">+ Agregar prop</button>'}
+    <div class="filtros">${chips}</div>
+    <div class="segmentos tres" role="tablist">${estados}</div>
+    <p class="explica"><b>${listos} de ${deUso.length}</b> listos${S.propUso === 'todos' ? '' : ` para ${esc(S.propUso)}`}.</p>
+    <ul class="props">${filas || `<li class="vacio">${todos.length ? 'No hay props con este filtro.' : 'Todavía no hay props cargados. Agregá el primero.'}</li>`}</ul>`;
+}
+
+function formProp() {
+  const f = S.propForm;
+  const conf = S.confirmar === `prop:${f.id}`;
+  return `<section class="card form-prop">
+    <h2>${f.id ? 'Editar prop' : 'Nuevo prop'}</h2>
+    <label>Nombre<input data-pf="nombre" value="${esc(f.nombre)}" placeholder="Ej: Silla de madera" maxlength="80" autocomplete="off"></label>
+    <div class="dos"><label>Cantidad<input data-pf="cantidad" value="${esc(f.cantidad)}" placeholder="Ej: 2" maxlength="20" autocomplete="off"></label>
+      <label>Nota<input data-pf="nota" value="${esc(f.nota)}" placeholder="Quién lo trae, dónde está…" maxlength="120" autocomplete="off"></label></div>
+    <p class="etiqueta">¿Dónde se usa?</p>
+    <div class="filtros envuelve">${USOS.map((u) => `<button type="button" class="filtro${f.usos.includes(u) ? ' on' : ''}" data-accion="pf-uso" data-v="${esc(u)}" aria-pressed="${f.usos.includes(u)}">${esc(u)}</button>`).join('')}</div>
+    <div class="fila"><button class="btn" data-accion="prop-guardar">Guardar</button>
+      <button class="btn sec" data-accion="prop-cancelar">Cancelar</button>
+      ${f.id ? `<button class="link peligro" data-accion="prop-borrar">${conf ? '¿Seguro? Tocá de nuevo' : 'Eliminar'}</button>` : ''}</div>
+  </section>`;
+}
+
 // ---------- Vista: Ajustes (총무) ----------
 
 function vistaAjustes() {
@@ -512,6 +603,50 @@ const acciones = {
     if (!f || S.cfg.ensayos.includes(f)) return;
     ejecutar(store.actualizarConfig({ ensayos: [...S.cfg.ensayos, f].sort() }), `Ensayo agregado: ${L.fechaLarga(f)}`);
   },
+  carpeta(d) { S.carpeta = d.id || null; render(); window.scrollTo(0, 0); },
+  'abrir-archivo'(d) {
+    const a = CARPETAS.find((c) => c.id === d.c)?.archivos[Number(d.i)];
+    if (a) abrirVisor(a);
+  },
+  'prop-uso'(d) { S.propUso = d.v; render(); },
+  'prop-estado'(d) { S.propEstado = d.v; render(); },
+  'prop-listo'(d) {
+    const p = S.props?.find((x) => x.id === d.id);
+    if (p) ejecutar(store.actualizarProp(p.id, { listo: !p.listo }));
+  },
+  'prop-nuevo'() {
+    S.propForm = { id: null, nombre: '', cantidad: '', nota: '', usos: S.propUso === 'todos' ? [] : [S.propUso] };
+    render();
+  },
+  'prop-editar'(d) {
+    const p = S.props?.find((x) => x.id === d.id);
+    if (!p) return;
+    S.propForm = { id: p.id, nombre: p.nombre, cantidad: p.cantidad, nota: p.nota, usos: [...p.usos] };
+    render();
+    window.scrollTo(0, 0);
+  },
+  'pf-uso'(d) {
+    const u = S.propForm.usos;
+    S.propForm.usos = u.includes(d.v) ? u.filter((x) => x !== d.v) : [...u, d.v];
+    document.activeElement?.blur();
+    render();
+  },
+  'prop-guardar'() {
+    const f = S.propForm;
+    const datos = { nombre: f.nombre.trim(), cantidad: f.cantidad.trim(), nota: f.nota.trim(), usos: USOS.filter((u) => f.usos.includes(u)) };
+    if (!datos.nombre) { avisar('Ponele un nombre al prop.', 'error'); return; }
+    document.activeElement?.blur();
+    S.propForm = null;
+    if (f.id) ejecutar(store.actualizarProp(f.id, datos), 'Prop actualizado.');
+    else ejecutar(store.agregarProp({ ...datos, listo: false }), 'Prop agregado.');
+    render();
+  },
+  'prop-cancelar'() { document.activeElement?.blur(); S.propForm = null; render(); },
+  'prop-borrar'() {
+    const id = S.propForm.id;
+    document.activeElement?.blur();
+    confirmarDosVeces(`prop:${id}`, () => { S.propForm = null; ejecutar(store.borrarProp(id), 'Prop eliminado.'); });
+  },
   'salir-ajustes'() { ls.set('tracker-admin', null); S.admin = false; S.vista = 'hoy'; render(); },
   'reiniciar-demo'() { store.reiniciar?.(); },
   recargar() { location.reload(); },
@@ -527,6 +662,7 @@ $app.addEventListener('input', (ev) => {
   const el = ev.target;
   if (el.closest('form[data-form="pasajes"]') && el.name) S.borradorQT[el.name] = el.value;
   if (el.id === 'nuevos') S.borradorNuevos = el.value;
+  if (el.dataset.pf && S.propForm) S.propForm[el.dataset.pf] = el.value;
 });
 
 $app.addEventListener('change', (ev) => {
@@ -585,6 +721,11 @@ try {
   const alFallar = (e) => { S.error = explicar(e); render(); };
   store.onPersonas((ps) => { S.personas = ps; render(); }, alFallar);
   store.onConfig((c) => { S.cfg = c; render(); }, alFallar);
+  store.onProps((ps) => { S.props = ps; S.propsError = null; render(); }, (e) => {
+    S.propsError = String(e?.code || '').includes('permission-denied')
+      ? 'Falta publicar las reglas nuevas de Firestore para esta sección.' : explicar(e);
+    render();
+  });
 } catch (e) {
   S.error = explicar(e);
   render();

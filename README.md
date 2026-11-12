@@ -10,6 +10,12 @@ Es una página estática (sin build): HTML, CSS y JavaScript. Los datos viven en
 2. **Hoy:** toca "Oré 10 minutos" y "Hice el QT". Si se olvidó un día, lo marca en la lista de la semana.
 3. **Miércoles de ensayo:** toca "Fichar llegada" al llegar. La hora la pone el servidor.
 4. **Ranking** y **Planilla** muestran cómo va todo el grupo. Desde la Planilla, tocando un nombre, se puede marcar a otra persona.
+5. **Archivos:** carpetas con material del viaje (cancionero, guiones). Los PDF y las imágenes se ven dentro de la página.
+6. **Props:** lista de lo que hace falta para las obras y actividades. Cualquiera puede agregar, editar, eliminar o marcar como listo, y filtrar por obra o actividad.
+
+## Sumar archivos
+
+Copiar el archivo en `archivos/<carpeta>/` y agregarlo a la lista de `archivos.js` (ahí también están las obras y actividades que sirven de filtro en Props). Después, commit y push. El repositorio es público: cualquiera con el link puede ver lo que se suba.
 
 ## Reglas del conteo
 
@@ -63,6 +69,9 @@ Abrir `http://localhost:8000`. En modo prueba se puede simular la hora: `http://
 | `logic.js` | Fechas en hora argentina, estados de llegada, rachas y rankings |
 | `store-firebase.js` | Lectura y escritura en Firestore, en vivo |
 | `store-local.js` | Modo prueba |
+| `archivos.js` | Lista de carpetas y archivos, y de obras y actividades (filtros de Props) |
+| `visor.js` | Lector de PDF, imágenes, audio y video |
+| `archivos/` | Los archivos en sí |
 | `config.js` | Datos públicos del proyecto de Firebase |
 | `firestore.rules` | Reglas de seguridad de Firestore |
 
@@ -70,6 +79,7 @@ Datos en Firestore:
 
 ```
 config/general   inicio, horaLimite, aperturaFichaje, ensayos[], pasajes{fecha: texto}
+props/{id}       nombre, cantidad, nota, usos[], listo
 personas/{id}    nombre, activo, desde, oracion{fecha: true}, qt{fecha: true}, llegadas{fecha: hora del servidor}
 ```
 

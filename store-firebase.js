@@ -2,6 +2,7 @@
 //
 // Estructura:
 //   config/general   { inicio, horaLimite, aperturaFichaje, ensayos: [fechas], pasajes: { fecha: "Oseas 6:1-11" } }
+//   props/{id}       { nombre, cantidad, nota, usos: [obras o actividades], listo }
 //   personas/{id}    { nombre, activo, desde, oracion: { fecha: true }, qt: { fecha: true }, llegadas: { fecha: Timestamp } }
 //
 // La hora de llegada la pone el servidor (serverTimestamp), no el reloj del celular.
@@ -32,6 +33,7 @@ export async function crearStoreFirebase(config) {
   const cfgRef = F.doc(db, 'config', 'general');
   const personasCol = F.collection(db, 'personas');
   const ref = (id) => F.doc(db, 'personas', id);
+  const propsCol = F.collection(db, 'props');
 
   // Primera vez: crear la configuración por defecto (solo si el servidor confirma que no existe).
   try {
@@ -79,11 +81,29 @@ export async function crearStoreFirebase(config) {
       return F.setDoc(cfgRef, cambios, { merge: true });
     },
 
+    onProps(cb, onError) {
+      return F.onSnapshot(propsCol, (snap) => cb(snap.docs.map((d) => normalizarProp(d.id, d.data()))), onError);
+    },
+    agregarProp(datos) { return F.addDoc(propsCol, datos); },
+    actualizarProp(id, cambios) { return F.updateDoc(F.doc(db, 'props', id), cambios); },
+    borrarProp(id) { return F.deleteDoc(F.doc(db, 'props', id)); },
+
     guardarPasajes(mapa) {
       const pasajes = {};
       for (const [f, texto] of Object.entries(mapa)) pasajes[f] = texto ? texto : F.deleteField();
       return F.setDoc(cfgRef, { pasajes }, { merge: true });
     },
+  };
+}
+
+function normalizarProp(id, d) {
+  return {
+    id,
+    nombre: d.nombre || '(sin nombre)',
+    cantidad: d.cantidad || '',
+    nota: d.nota || '',
+    usos: Array.isArray(d.usos) ? d.usos : [],
+    listo: d.listo === true,
   };
 }
 

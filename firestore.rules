@@ -22,6 +22,17 @@ service cloud.firestore {
         && request.resource.data.ensayos.size() <= 60;
     }
 
+    match /props/{id} {
+      allow read, delete: if desdeLaPagina();
+      allow create, update: if desdeLaPagina()
+        && request.resource.data.keys().hasOnly(['nombre', 'cantidad', 'nota', 'usos', 'listo'])
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() > 0
+        && request.resource.data.nombre.size() <= 80
+        && request.resource.data.usos is list
+        && request.resource.data.usos.size() <= 20;
+    }
+
     match /personas/{id} {
       allow read: if desdeLaPagina();
       allow create, update: if desdeLaPagina()
