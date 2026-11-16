@@ -37,7 +37,7 @@ Los celulares guardan copias de la página. Cada vez que se cambie el código, s
 
 Abrir el link agregando `#ajustes` al final (por ejemplo `https://lhong01.github.io/<repo>/#ajustes`). Desde ese momento, ese celular muestra la pestaña **Ajustes**:
 
-- **QT de la semana:** cargar el pasaje de cada día. Aparece en la pantalla de todos.
+- **QT de la semana:** cargar el pasaje de cada día (de lunes a sábado; los domingos no llevan). Aparece en la pantalla de todos. Escrito como "Oseas 13:1-16", se toca y se lee en NVI dentro de la app (página de YouVersion embebida; `biblia.js` interpreta el pasaje). Si el formato no se entiende, abre una búsqueda en Bible Gateway.
 - **Participantes:** agregar (uno por línea), renombrar, desactivar o cambiar desde cuándo le cuenta a cada uno.
 - **Ensayos:** quitar un miércoles sin ensayo (por ejemplo el 23/12 o el 30/12) o agregar uno extra. Cambiar la hora límite, la hora desde la que se puede fichar y la fecha de inicio.
 

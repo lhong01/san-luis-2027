@@ -1,5 +1,7 @@
-// Visor a pantalla completa para PDF, imágenes, audio y video.
+// Visor a pantalla completa para PDF, imágenes, audio, video y la lectura del QT.
 // Vive fuera de #app para que los re-dibujados de la página no lo cierren.
+
+import { leerPasaje } from './biblia.js?v=7';
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
 const $visor = document.getElementById('visor');
@@ -30,6 +32,7 @@ export function cerrarVisor() {
   turno++;
   observador?.disconnect();
   observador = null;
+  $visor._partes = null;
   $visor.hidden = true;
   $visor.innerHTML = '';
   document.body.classList.remove('con-visor');
@@ -58,6 +61,42 @@ export function abrirVisor(archivo) {
   } else if (archivo.tipo === 'pdf') {
     mostrarPdf(url, $cuerpo, mio);
   }
+}
+
+// Lectura del QT en NVI: muestra la página del pasaje de YouVersion dentro de la app.
+// Si el pasaje cruza capítulos, se elige cada parte con los botones de arriba.
+export function abrirLectura(texto) {
+  const ref = leerPasaje(texto);
+  if (!ref) return false;
+  cerrarVisor();
+  const [primera] = ref.partes;
+  $visor.innerHTML = `<header class="visor-top">
+      <button class="visor-cerrar" data-visor="cerrar" aria-label="Volver">‹ Volver</button>
+      <span class="visor-titulo">${esc(ref.texto)} <small class="sigla">NVI</small></span>
+      <a class="visor-bajar" data-visor="afuera" href="${primera.url}" target="_blank" rel="noopener">YouVersion ↗</a>
+    </header>
+    ${ref.partes.length > 1 ? `<nav class="lectura-partes" aria-label="Partes del pasaje">${ref.partes.map((p, i) =>
+      `<button data-visor="parte" data-i="${i}" aria-pressed="${i === 0}">${esc(p.etiqueta)}${p.nota ? ` <small>${esc(p.nota)}</small>` : ''}</button>`).join('')}</nav>` : ''}
+    <div class="lectura">
+      <p class="lectura-cargando">Cargando el pasaje…<small>Si no aparece, abrilo con YouVersion ↗</small></p>
+      <iframe title="${esc(ref.texto)} (NVI)" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+    </div>`;
+  $visor.hidden = false;
+  document.body.classList.add('con-visor');
+  $visor._partes = ref.partes;
+  mostrarParte(0);
+  return true;
+}
+
+function mostrarParte(i) {
+  const p = $visor._partes?.[i];
+  const $marco = $visor.querySelector('.lectura iframe');
+  if (!p || !$marco) return;
+  $visor.querySelectorAll('[data-visor="parte"]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.i) === i)));
+  $visor.querySelector('[data-visor="afuera"]').href = p.url;
+  $marco.classList.remove('lista');
+  $marco.onload = () => $marco.classList.add('lista');
+  $marco.src = p.url;
 }
 
 async function mostrarPdf(url, $cuerpo, mio) {
@@ -115,6 +154,8 @@ async function dibujar(pdf, hoja, mio) {
 
 $visor.addEventListener('click', (ev) => {
   if (ev.target.closest('[data-visor="cerrar"]')) cerrarVisor();
+  const $parte = ev.target.closest('[data-visor="parte"]');
+  if ($parte) mostrarParte(Number($parte.dataset.i));
 });
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape' && !$visor.hidden) cerrarVisor();

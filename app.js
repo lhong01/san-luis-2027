@@ -1,7 +1,8 @@
-import { firebaseConfig } from './config.js?v=6';
-import * as L from './logic.js?v=6';
-import { CARPETAS, USOS } from './archivos.js?v=6';
-import { abrirVisor } from './visor.js?v=6';
+import { firebaseConfig } from './config.js?v=7';
+import * as L from './logic.js?v=7';
+import { CARPETAS, USOS } from './archivos.js?v=7';
+import { abrirVisor, abrirLectura } from './visor.js?v=7';
+import { leerPasaje, urlBusqueda } from './biblia.js?v=7';
 
 const $app = document.getElementById('app');
 const $aviso = document.getElementById('aviso');
@@ -238,7 +239,8 @@ function cardHoy(p, hoy, r) {
   return `<section class="card">
     <p class="eyebrow">Hoy</p>
     <h2>${capital(L.fechaLarga(hoy))}</h2>
-    ${pasaje ? `<p class="pasaje"><span>QT de hoy</span>${esc(pasaje)}</p>` : ''}
+    ${pasaje ? enlacePasaje(hoy, pasaje, 'pasaje', `<span class="pasaje-txt"><small>QT de hoy</small>${esc(pasaje)}</span>
+      <span class="pasaje-leer">Leer <span aria-hidden="true">›</span></span>`) : ''}
     <div class="habitos">
       ${botonHabito(p, 'oracion', hoy, '🙏', 'Oré 10 minutos')}
       ${botonHabito(p, 'qt', hoy, '📖', 'Hice el QT')}
@@ -246,6 +248,14 @@ function cardHoy(p, hoy, r) {
     <p class="rachas"><span>🔥 Oración: <b>${plural(r.oracion.racha, 'día', 'días')}</b></span>
       <span>🔥 QT: <b>${plural(r.qt.racha, 'día', 'días')}</b></span></p>
   </section>`;
+}
+
+// El pasaje del QT se toca para leerlo en NVI dentro de la app.
+// Si está escrito en un formato que no se entiende, abre una búsqueda en Bible Gateway.
+function enlacePasaje(f, pasaje, clase, interior) {
+  return leerPasaje(pasaje)
+    ? `<button class="${clase}" data-accion="leer" data-fecha="${f}">${interior}</button>`
+    : `<a class="${clase}" href="${esc(urlBusqueda(pasaje))}" target="_blank" rel="noopener">${interior}</a>`;
 }
 
 function botonHabito(p, tipo, f, ico, texto) {
@@ -293,7 +303,7 @@ function filaDia(p, f, hoy, desde) {
   const ensayo = S.cfg.ensayos.includes(f) && f >= desde ? chipEnsayo(p, f, false) : '';
   return `<li class="dia${f === hoy ? ' es-hoy' : ''}${fuera ? ' fuera' : ''}">
     <div class="dia-fecha"><span>${L.nombreDia(f)}</span><b>${Number(f.slice(8))}</b></div>
-    <div class="dia-info">${pasaje ? `<span class="dia-pasaje">${esc(pasaje)}</span>` : ''}${ensayo}</div>
+    <div class="dia-info">${pasaje ? enlacePasaje(f, pasaje, 'dia-pasaje', `${esc(pasaje)} <span aria-hidden="true">›</span>`) : ''}${ensayo}</div>
     <div class="dia-marcas">${mini(p, 'oracion', f, '🙏', 'Oración', fuera)}${mini(p, 'qt', f, '📖', 'QT', fuera)}</div>
   </li>`;
 }
@@ -523,6 +533,7 @@ function vistaAjustes() {
     <form data-form="pasajes" class="form-qt">
       ${diasQT.map((f) => `<label class="fila-qt"><span>${L.nombreDia(f)} ${L.fechaCorta(f)}</span>
         <input name="${f}" value="${esc(valorQT(f))}" placeholder="Ej: Oseas 6:1-11" autocomplete="off"></label>`).join('')}
+      <p class="nota">Escribilo como "Oseas 13:1-16" (libro capítulo:versículos) para que se pueda leer en NVI desde la app.</p>
       <button type="submit" class="btn">Guardar QT</button>
     </form>
   </section>
@@ -629,6 +640,7 @@ const acciones = {
     const a = CARPETAS.find((c) => c.id === d.c)?.archivos[Number(d.i)];
     if (a) abrirVisor(a);
   },
+  leer(d) { abrirLectura(S.cfg.pasajes?.[d.fecha]); },
   'prop-uso'(d) { S.propUso = d.v; render(); },
   'prop-estado'(d) { S.propEstado = d.v; render(); },
   'prop-listo'(d) {
@@ -736,10 +748,10 @@ setTimeout(() => {
 
 try {
   if (modoPrueba) {
-    const { crearStoreLocal } = await import('./store-local.js?v=6');
+    const { crearStoreLocal } = await import('./store-local.js?v=7');
     store = crearStoreLocal(ahora);
   } else {
-    const { crearStoreFirebase } = await import('./store-firebase.js?v=6');
+    const { crearStoreFirebase } = await import('./store-firebase.js?v=7');
     store = await crearStoreFirebase(firebaseConfig);
   }
   const alFallar = (e) => { S.error = explicar(e); render(); };

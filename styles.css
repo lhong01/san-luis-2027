@@ -160,14 +160,24 @@ h1, h2 { line-height: 1.2; }
 
 /* ---------- Hoy ---------- */
 .pasaje {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
   margin: 12px 0 0;
-  padding: 8px 12px;
+  padding: 9px 12px;
+  border: 0;
   border-left: 3px solid var(--qt);
   border-radius: 8px;
   background: var(--surface-2);
+  color: var(--text);
   font-weight: 600;
+  text-align: left;
+  text-decoration: none;
 }
-.pasaje span { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pasaje-txt { flex: 1; min-width: 0; }
+.pasaje-txt small { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pasaje-leer { flex: none; font-size: .85rem; font-weight: 700; color: var(--qt); }
 
 .habitos { display: grid; gap: 10px; margin-top: 14px; }
 .habito {
@@ -248,7 +258,20 @@ h1, h2 { line-height: 1.2; }
 .dia.es-hoy .dia-fecha b, .dia.es-hoy .dia-fecha span { color: var(--accent); }
 .dia.fuera .dia-fecha, .dia.fuera .dia-info { opacity: .45; }
 .dia-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: .82rem; }
-.dia-pasaje { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); }
+.dia-pasaje {
+  display: block;
+  max-width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--qt);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .dia-marcas { display: flex; gap: 6px; }
 .mini {
   width: 44px;
@@ -541,6 +564,25 @@ body.con-visor { overflow: hidden; }
 .visor-cerrar { min-height: 40px; padding: 0 12px 0 6px; border: 0; background: none; font-weight: 700; color: var(--primary); white-space: nowrap; }
 .visor-titulo { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 700; font-size: .92rem; }
 .visor-bajar { font-size: .85rem; font-weight: 600; color: var(--primary); white-space: nowrap; }
+.visor-titulo .sigla { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: .68rem; color: var(--muted); vertical-align: 1px; }
+.lectura-partes { display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--surface); }
+.lectura-partes button {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: .82rem;
+  font-weight: 600;
+}
+.lectura-partes button small { font-weight: 400; color: var(--muted); }
+.lectura-partes button[aria-pressed="true"] { border-color: var(--qt); background: var(--qt); color: var(--surface); }
+.lectura-partes button[aria-pressed="true"] small { color: inherit; opacity: .8; }
+.lectura { position: relative; flex: 1; padding-bottom: env(safe-area-inset-bottom); }
+.lectura-cargando { position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; margin: 0; padding: 24px; text-align: center; color: var(--muted); }
+.lectura-cargando small { font-size: .8rem; }
+.lectura iframe { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - env(safe-area-inset-bottom)); border: 0; background: #fff; opacity: 0; transition: opacity .2s; }
+.lectura iframe.lista { opacity: 1; }
 .visor-cuerpo { flex: 1; overflow: auto; padding: 10px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
 .visor-cuerpo > * { max-width: 900px; margin-left: auto; margin-right: auto; }
 .visor-nota { margin: 6px auto 10px; text-align: center; font-size: .8rem; color: var(--muted); }
