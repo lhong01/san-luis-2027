@@ -1,8 +1,8 @@
-import { firebaseConfig } from './config.js?v=7';
-import * as L from './logic.js?v=7';
-import { CARPETAS, USOS } from './archivos.js?v=7';
-import { abrirVisor, abrirLectura } from './visor.js?v=7';
-import { leerPasaje, urlBusqueda } from './biblia.js?v=7';
+import { firebaseConfig } from './config.js?v=8';
+import * as L from './logic.js?v=8';
+import { CARPETAS, USOS } from './archivos.js?v=8';
+import { abrirVisor, abrirLectura } from './visor.js?v=8';
+import { leerPasaje, urlBusqueda } from './biblia.js?v=8';
 
 const $app = document.getElementById('app');
 const $aviso = document.getElementById('aviso');
@@ -748,10 +748,10 @@ setTimeout(() => {
 
 try {
   if (modoPrueba) {
-    const { crearStoreLocal } = await import('./store-local.js?v=7');
+    const { crearStoreLocal } = await import('./store-local.js?v=8');
     store = crearStoreLocal(ahora);
   } else {
-    const { crearStoreFirebase } = await import('./store-firebase.js?v=7');
+    const { crearStoreFirebase } = await import('./store-firebase.js?v=8');
     store = await crearStoreFirebase(firebaseConfig);
   }
   const alFallar = (e) => { S.error = explicar(e); render(); };

@@ -30,7 +30,7 @@ export const CARPETAS = [
 
 // Obras y actividades del viaje: sirven de filtro en la sección "Props".
 export const USOS = [
-  'Silla', 'Carga pesada', 'Puerta', 'Cadena de pecado',
-  'Alabanza y danza', 'Globos y pintura de caras', 'Juegos', 'Libro de colores', 'Cuatro Leyes',
-  'Sonido', 'General',
+  'Silla', 'Carga pesada', 'Puerta', 'Cadena de pecado', 'Dios es amor',
+  'Alabanza y danza', 'Globos y pintura de caras', 'Juegos', 'Niños', 'Libro de colores', 'Cuatro Leyes',
+  'Sonido', 'Electricidad', 'Botiquín', 'General',
 ];

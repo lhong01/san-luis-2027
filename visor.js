@@ -1,7 +1,7 @@
 // Visor a pantalla completa para PDF, imágenes, audio, video y la lectura del QT.
 // Vive fuera de #app para que los re-dibujados de la página no lo cierren.
 
-import { leerPasaje } from './biblia.js?v=7';
+import { leerPasaje } from './biblia.js?v=8';
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174';
 const $visor = document.getElementById('visor');
